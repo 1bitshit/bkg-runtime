@@ -26,6 +26,9 @@ node_modules/
 .opencode
 . conf/
 
+# Environment files
+.env.*.local
+
 # Local binaries
 bin/
 .claude-tower/
