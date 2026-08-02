@@ -73,7 +73,7 @@ INSTANCE_w1_SETTINGS_DIR="conf/claude-w1"
 INSTANCE_w1_NAME="w1"
 INSTANCE_w1_MODEL="$W1_MODEL"
 INSTANCE_w1_BIN="$BIN_DIR/claude-nim-w1"
-INSTANCE_w1_SESSION="$BASE_DIR/session-w1.json"
+INSTANCE_w1_SESSION="$BASE_DIR/sessions/w1.json"
 
 # Instance 2
 INSTANCE_w2_API_KEY="$W2_KEY"
@@ -83,7 +83,7 @@ INSTANCE_w2_SETTINGS_DIR="conf/claude-w2"
 INSTANCE_w2_NAME="w2"
 INSTANCE_w2_MODEL="$W2_MODEL"
 INSTANCE_w2_BIN="$BIN_DIR/claude-nim-w2"
-INSTANCE_w2_SESSION="$BASE_DIR/session-w2.json"
+INSTANCE_w2_SESSION="$BASE_DIR/sessions/w2.json"
 
 # Instance 3
 INSTANCE_w3_API_KEY="$W3_KEY"
@@ -93,7 +93,7 @@ INSTANCE_w3_SETTINGS_DIR="conf/claude-w3"
 INSTANCE_w3_NAME="w3"
 INSTANCE_w3_MODEL="$W3_MODEL"
 INSTANCE_w3_BIN="$BIN_DIR/claude-nim-w3"
-INSTANCE_w3_SESSION="$BASE_DIR/session-w3.json"
+INSTANCE_w3_SESSION="$BASE_DIR/sessions/w3.json"
 
 # Binary directory for local claude-nim binaries
 BIN_DIR="$BIN_DIR"
@@ -499,7 +499,37 @@ Each instance is a separate container:
 | claude-w2 | 7001 | bin/claude-nim-w2 |
 | claude-w3 | 7002 | bin/claude-nim-w3 |
 
-Sessions persist via mounted `conf/` and `session-w*.json` volumes.
+Sessions persist via mounted `conf/` and `sessions/` volumes.
+
+## Multica Integration
+
+The 3 claude-nim gateways act as local Anthropic-compatible APIs. To use them
+with the Multica daemon, set the daemon's `MULTICA_CLAUDE_PATH` to a wrapper that
+routes through one of the gateways:
+
+```bash
+# In docker-compose.selfhost.custom.yml, add to the `daemon` service:
+environment:
+  - MULTICA_CLAUDE_PATH=fss-claude-w1  # or w2, w3
+  - ANTHROPIC_BASE_URL=http://claude-w1:7000
+  - ANTHROPIC_API_KEY=$INSTANCE_w1_API_KEY
+
+services:
+  daemon:
+    ...
+    depends_on:
+      - claude-w1
+      - claude-w2
+      - claude-w3
+```
+
+Or run all 3 daemons, each pointing to a different gateway:
+
+```bash
+MULTICA_CLAUDE_PATH=fss-claude-w1 ANTHROPIC_BASE_URL=http://claude-w1:7000 multica daemon start
+MULTICA_CLAUDE_PATH=fss-claude-w2 ANTHROPIC_BASE_URL=http://claude-w2:7001 multica daemon start
+MULTICA_CLAUDE_PATH=fss-claude-w3 ANTHROPIC_BASE_URL=http://claude-w3:7002 multica daemon start
+```
 READMEEOF
 echo "Created README.md"
 
@@ -523,11 +553,8 @@ conf/claude-w3/
 *.log
 screenlog.*
 
-# Session files
-session-w*.json
-
-# Docker
-*.pid
+# Session directory
+sessions/
 
 # OS files
 .DS_Store

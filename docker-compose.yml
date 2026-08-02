@@ -8,7 +8,7 @@ services:
       - "7000:7000"
     volumes:
       - ./conf/claude-w1:/app/conf/claude-w1
-      - ./session-w1.json:/app/session-w1.json
+      - ./sessions:/app/sessions:rw
       - ./bin:/app/bin:ro
     environment:
       - INSTANCE=claude-w1
@@ -21,7 +21,7 @@ services:
       - "7001:7001"
     volumes:
       - ./conf/claude-w2:/app/conf/claude-w2
-      - ./session-w2.json:/app/session-w2.json
+      - ./sessions:/app/sessions:rw
       - ./bin:/app/bin:ro
     environment:
       - INSTANCE=claude-w2
@@ -34,7 +34,7 @@ services:
       - "7002:7002"
     volumes:
       - ./conf/claude-w3:/app/conf/claude-w3
-      - ./session-w3.json:/app/session-w3.json
+      - ./sessions:/app/sessions:rw
       - ./bin:/app/bin:ro
     environment:
       - INSTANCE=claude-w3

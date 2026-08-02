@@ -80,4 +80,34 @@ Each instance is a separate container:
 | claude-w2 | 7001 | bin/claude-nim-w2 |
 | claude-w3 | 7002 | bin/claude-nim-w3 |
 
-Sessions persist via mounted `conf/` and `session-w*.json` volumes.
+Sessions persist via mounted `conf/` and `sessions/` volumes.
+
+## Multica Integration
+
+The 3 claude-nim gateways act as local Anthropic-compatible APIs. To use them
+with the Multica daemon, set the daemon's `MULTICA_CLAUDE_PATH` to a wrapper that
+routes through one of the gateways:
+
+```bash
+# In docker-compose.selfhost.custom.yml, add to the `daemon` service:
+environment:
+  - MULTICA_CLAUDE_PATH=fss-claude-w1  # or w2, w3
+  - ANTHROPIC_BASE_URL=http://claude-w1:7000
+  - ANTHROPIC_API_KEY=$INSTANCE_w1_API_KEY
+
+services:
+  daemon:
+    ...
+    depends_on:
+      - claude-w1
+      - claude-w2
+      - claude-w3
+```
+
+Or run all 3 daemons, each pointing to a different gateway:
+
+```bash
+MULTICA_CLAUDE_PATH=fss-claude-w1 ANTHROPIC_BASE_URL=http://claude-w1:7000 multica daemon start
+MULTICA_CLAUDE_PATH=fss-claude-w2 ANTHROPIC_BASE_URL=http://claude-w2:7001 multica daemon start
+MULTICA_CLAUDE_PATH=fss-claude-w3 ANTHROPIC_BASE_URL=http://claude-w3:7002 multica daemon start
+```

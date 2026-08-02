@@ -7,11 +7,8 @@ conf/claude-w3/
 *.log
 screenlog.*
 
-# Session files
-session-w*.json
-
-# Docker
-*.pid
+# Session directory
+sessions/
 
 # OS files
 .DS_Store
