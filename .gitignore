@@ -23,3 +23,6 @@ node_modules/
 *.local
 .opencode
 . conf/
+
+# Local binaries
+bin/
