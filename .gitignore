@@ -1,7 +1,7 @@
 # Instance settings directories
-.claude-w1/
-.claude-w2/
-.claude-w3/
+conf/claude-w1/
+conf/claude-w2/
+conf/claude-w3/
 
 # Screen logs and temp
 *.log

@@ -73,6 +73,13 @@ start_instance() {
   SETTINGS_DIR="$(make_abs "$SETTINGS_DIR")"
   mkdir -p "$SETTINGS_DIR"
 
+  # Determine binary: use local bin if available
+  local NIM_BIN="claude-nim"
+  if [ -n "$BIN_DIR" ] && [ -x "$BIN_DIR/claude-nim-${INSTANCE_NAME}" ]; then
+    NIM_BIN="$BIN_DIR/claude-nim-${INSTANCE_NAME}"
+    echo "Using local binary: $NIM_BIN"
+  fi
+
   # Write Claude config
   cat > "${SETTINGS_DIR}/.claude.json" << 'CLAUDFE'
 {
@@ -91,7 +98,7 @@ CLAUDFE
   sleep 1
 
   # Build claude-nim command with model flag
-  local NIM_CMD=(claude-nim --serve-only --port "$PORT" --api-key "$API_KEY" --host "$HOST")
+  local NIM_CMD=("$NIM_BIN" --serve-only --yolo --port "$PORT" --api-key "$API_KEY" --host "$HOST")
   if [ -n "$MODEL" ]; then
     NIM_CMD+=(--model "$MODEL")
   fi

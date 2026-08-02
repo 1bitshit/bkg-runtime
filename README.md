@@ -26,25 +26,26 @@ Manage multiple Claude Code instances (w1, w2, w3) running behind claude-nim gat
 
 ```env
 INSTANCE_w1_API_KEY="nvapi-..."
-INSTANCE_w1_PORT="5000"
+INSTANCE_w1_PORT="7000"
 INSTANCE_w1_HOST="0.0.0.0"
-INSTANCE_w1_SETTINGS_DIR=".claude-w1"
+INSTANCE_w1_SETTINGS_DIR="conf/claude-w1"
 INSTANCE_w1_NAME="w1"
 INSTANCE_w1_MODEL="minimaxai/minimax-m3"
 ```
 
 - **API_KEY** — API key for claude-nim gateway
-- **PORT** — Port for claude-nim gateway (5000, 5001, 5002)
+- **PORT** — Port for claude-nim gateway (7000, 7001, 7002)
 - **HOST** — Bind address (`0.0.0.0` for external access)
-- **SETTINGS_DIR** — Claude config directory (relative to script dir)
+- **SETTINGS_DIR** — Claude config directory (relative to script dir, e.g. `conf/claude-w1`)
 - **NAME** — Screen session name suffix
 - **MODEL** — LLM model for claude-nim gateway
+- **BIN_DIR** — Directory containing local `claude-nim-w1/w2/w3` binaries (auto-detected)
 
 ## Architecture
 
 ```
 Client (claude) <---> claude-nim gateway <---> LLM API
-                     (port 5000, 5001, 5002)
+                      (port 7000, 7001, 7002)
 ```
 
 Each instance runs in its own `screen` session with an isolated Claude config directory.
