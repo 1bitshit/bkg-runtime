@@ -7,6 +7,12 @@ conf/claude-w3/
 *.log
 screenlog.*
 
+# Session files
+session-w*.json
+
+# Docker
+*.pid
+
 # OS files
 .DS_Store
 Thumbs.db

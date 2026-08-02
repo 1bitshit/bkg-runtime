@@ -72,6 +72,8 @@ INSTANCE_w1_HOST="0.0.0.0"
 INSTANCE_w1_SETTINGS_DIR="conf/claude-w1"
 INSTANCE_w1_NAME="w1"
 INSTANCE_w1_MODEL="$W1_MODEL"
+INSTANCE_w1_BIN="$BIN_DIR/claude-nim-w1"
+INSTANCE_w1_SESSION="$BASE_DIR/session-w1.json"
 
 # Instance 2
 INSTANCE_w2_API_KEY="$W2_KEY"
@@ -80,6 +82,8 @@ INSTANCE_w2_HOST="0.0.0.0"
 INSTANCE_w2_SETTINGS_DIR="conf/claude-w2"
 INSTANCE_w2_NAME="w2"
 INSTANCE_w2_MODEL="$W2_MODEL"
+INSTANCE_w2_BIN="$BIN_DIR/claude-nim-w2"
+INSTANCE_w2_SESSION="$BASE_DIR/session-w2.json"
 
 # Instance 3
 INSTANCE_w3_API_KEY="$W3_KEY"
@@ -88,6 +92,8 @@ INSTANCE_w3_HOST="0.0.0.0"
 INSTANCE_w3_SETTINGS_DIR="conf/claude-w3"
 INSTANCE_w3_NAME="w3"
 INSTANCE_w3_MODEL="$W3_MODEL"
+INSTANCE_w3_BIN="$BIN_DIR/claude-nim-w3"
+INSTANCE_w3_SESSION="$BASE_DIR/session-w3.json"
 
 # Binary directory for local claude-nim binaries
 BIN_DIR="$BIN_DIR"
@@ -157,6 +163,8 @@ start_instance() {
   local SETTINGS_DIR_VAR="INSTANCE_${INSTANCE}_SETTINGS_DIR"
   local NAME_VAR="INSTANCE_${INSTANCE}_NAME"
   local MODEL_VAR="INSTANCE_${INSTANCE}_MODEL"
+  local BIN_VAR="INSTANCE_${INSTANCE}_BIN"
+  local SESSION_VAR="INSTANCE_${INSTANCE}_SESSION"
 
   local API_KEY="${!API_KEY_VAR}"
   local PORT="${!PORT_VAR}"
@@ -164,6 +172,8 @@ start_instance() {
   local SETTINGS_DIR="${!SETTINGS_DIR_VAR}"
   local INSTANCE_NAME="${!NAME_VAR}"
   local MODEL="${!MODEL_VAR}"
+  local INSTANCE_BIN="${!BIN_VAR}"
+  local SESSION="${!SESSION_VAR}"
 
   if [ -z "$API_KEY" ] || [ -z "$PORT" ]; then
     echo "Missing configuration for instance $INSTANCE"
@@ -174,10 +184,14 @@ start_instance() {
   SETTINGS_DIR="$(make_abs "$SETTINGS_DIR")"
   mkdir -p "$SETTINGS_DIR/logs" "$SETTINGS_DIR/cache" "$SETTINGS_DIR/backups"
 
-  # Determine binary: use local bin if available
+  # Determine binary: prefer per-instance BIN, then $BIN_DIR, then system PATH
   local NIM_BIN="claude-nim"
-  if [ -n "$BIN_DIR" ] && [ -x "$BIN_DIR/claude-nim-${INSTANCE_NAME}" ]; then
+  if [ -n "$INSTANCE_BIN" ] && [ -x "$INSTANCE_BIN" ]; then
+    NIM_BIN="$INSTANCE_BIN"
+  elif [ -n "$BIN_DIR" ] && [ -x "$BIN_DIR/claude-nim-${INSTANCE_NAME}" ]; then
     NIM_BIN="$BIN_DIR/claude-nim-${INSTANCE_NAME}"
+  fi
+  if [ "$NIM_BIN" != "claude-nim" ]; then
     echo "Using local binary: $NIM_BIN"
   fi
 
@@ -206,8 +220,9 @@ NIM_BINARY="${NIM_BIN:-claude-nim}"
 SETTINGS_DIR="${SETTINGS_DIR}"
 SCREEN_SESSION="claude-nim-${INSTANCE_NAME}"
 LOG_DIR="${SETTINGS_DIR}/logs"
-CACHE_DIR="${SETTINGS_DIR}/cache"
-ANTHROPIC_BASE_URL="http://${HOST}:${PORT}"
+   CACHE_DIR="${SETTINGS_DIR}/cache"
+   SESSION_FILE="${SESSION:-${SCRIPT_DIR}/session-${INSTANCE_NAME}.json}"
+   ANTHROPIC_BASE_URL="http://${HOST}:${PORT}"
 CLAUDE_CONFIG_DIR="${SETTINGS_DIR}"
 RUNCONF
   echo "Runtime config written to ${SETTINGS_DIR}/runtime.conf"
@@ -443,7 +458,8 @@ INSTANCE_w1_MODEL="minimaxai/minimax-m3"
 - **SETTINGS_DIR** — Claude config directory (relative to script dir, e.g. `conf/claude-w1`)
 - **NAME** — Screen session name suffix
 - **MODEL** — LLM model for claude-nim gateway
-- **BIN_DIR** — Directory containing local `claude-nim-w1/w2/w3` binaries (auto-detected)
+- **BIN_DIR** — Directory containing local `claude-nim-w1/w2/w3` binaries
+- **INSTANCE_wX_BIN** — Full path to instance binary (overrides `BIN_DIR`)
 
 ## Architecture
 
@@ -458,8 +474,32 @@ Each instance runs in its own `screen` session with an isolated Claude config di
 
 - `screen`
 - `curl`
-- `claude-nim` (in PATH)
+- `claude-nim-w1/w2/w3` binaries in `bin/` (or system `claude-nim`)
 - `bun` (for `bunx --yes claude`)
+
+## Docker
+
+Run all 3 instances in Docker containers:
+
+```bash
+docker compose up -d
+```
+
+Or integrate with existing Multica stack:
+
+```bash
+docker compose -f docker-compose.yml -f ../docker-compose.selfhost.custom.yml up -d
+```
+
+Each instance is a separate container:
+
+| Service   | Port | Binary           |
+|-----------|------|------------------|
+| claude-w1 | 7000 | bin/claude-nim-w1 |
+| claude-w2 | 7001 | bin/claude-nim-w2 |
+| claude-w3 | 7002 | bin/claude-nim-w3 |
+
+Sessions persist via mounted `conf/` and `session-w*.json` volumes.
 READMEEOF
 echo "Created README.md"
 
@@ -482,6 +522,12 @@ conf/claude-w3/
 # Screen logs and temp
 *.log
 screenlog.*
+
+# Session files
+session-w*.json
+
+# Docker
+*.pid
 
 # OS files
 .DS_Store

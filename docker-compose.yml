@@ -1,0 +1,41 @@
+name: bkg-runtime
+
+services:
+  claude-w1:
+    build: .
+    container_name: bkg-claude-w1
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./conf/claude-w1:/app/conf/claude-w1
+      - ./session-w1.json:/app/session-w1.json
+      - ./bin:/app/bin:ro
+    environment:
+      - INSTANCE=claude-w1
+    command: ["./start-claude-nim.sh", "start", "--w1"]
+
+  claude-w2:
+    build: .
+    container_name: bkg-claude-w2
+    ports:
+      - "7001:7001"
+    volumes:
+      - ./conf/claude-w2:/app/conf/claude-w2
+      - ./session-w2.json:/app/session-w2.json
+      - ./bin:/app/bin:ro
+    environment:
+      - INSTANCE=claude-w2
+    command: ["./start-claude-nim.sh", "start", "--w2"]
+
+  claude-w3:
+    build: .
+    container_name: bkg-claude-w3
+    ports:
+      - "7002:7002"
+    volumes:
+      - ./conf/claude-w3:/app/conf/claude-w3
+      - ./session-w3.json:/app/session-w3.json
+      - ./bin:/app/bin:ro
+    environment:
+      - INSTANCE=claude-w3
+    command: ["./start-claude-nim.sh", "start", "--w3"]

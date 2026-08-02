@@ -56,6 +56,8 @@ start_instance() {
   local SETTINGS_DIR_VAR="INSTANCE_${INSTANCE}_SETTINGS_DIR"
   local NAME_VAR="INSTANCE_${INSTANCE}_NAME"
   local MODEL_VAR="INSTANCE_${INSTANCE}_MODEL"
+  local BIN_VAR="INSTANCE_${INSTANCE}_BIN"
+  local SESSION_VAR="INSTANCE_${INSTANCE}_SESSION"
 
   local API_KEY="${!API_KEY_VAR}"
   local PORT="${!PORT_VAR}"
@@ -63,6 +65,8 @@ start_instance() {
   local SETTINGS_DIR="${!SETTINGS_DIR_VAR}"
   local INSTANCE_NAME="${!NAME_VAR}"
   local MODEL="${!MODEL_VAR}"
+  local INSTANCE_BIN="${!BIN_VAR}"
+  local SESSION="${!SESSION_VAR}"
 
   if [ -z "$API_KEY" ] || [ -z "$PORT" ]; then
     echo "Missing configuration for instance $INSTANCE"
@@ -73,10 +77,14 @@ start_instance() {
   SETTINGS_DIR="$(make_abs "$SETTINGS_DIR")"
   mkdir -p "$SETTINGS_DIR/logs" "$SETTINGS_DIR/cache" "$SETTINGS_DIR/backups"
 
-  # Determine binary: use local bin if available
+  # Determine binary: prefer per-instance BIN, then $BIN_DIR, then system PATH
   local NIM_BIN="claude-nim"
-  if [ -n "$BIN_DIR" ] && [ -x "$BIN_DIR/claude-nim-${INSTANCE_NAME}" ]; then
+  if [ -n "$INSTANCE_BIN" ] && [ -x "$INSTANCE_BIN" ]; then
+    NIM_BIN="$INSTANCE_BIN"
+  elif [ -n "$BIN_DIR" ] && [ -x "$BIN_DIR/claude-nim-${INSTANCE_NAME}" ]; then
     NIM_BIN="$BIN_DIR/claude-nim-${INSTANCE_NAME}"
+  fi
+  if [ "$NIM_BIN" != "claude-nim" ]; then
     echo "Using local binary: $NIM_BIN"
   fi
 
@@ -105,8 +113,9 @@ NIM_BINARY="${NIM_BIN:-claude-nim}"
 SETTINGS_DIR="${SETTINGS_DIR}"
 SCREEN_SESSION="claude-nim-${INSTANCE_NAME}"
 LOG_DIR="${SETTINGS_DIR}/logs"
-CACHE_DIR="${SETTINGS_DIR}/cache"
-ANTHROPIC_BASE_URL="http://${HOST}:${PORT}"
+   CACHE_DIR="${SETTINGS_DIR}/cache"
+   SESSION_FILE="${SESSION:-${SCRIPT_DIR}/session-${INSTANCE_NAME}.json}"
+   ANTHROPIC_BASE_URL="http://${HOST}:${PORT}"
 CLAUDE_CONFIG_DIR="${SETTINGS_DIR}"
 RUNCONF
   echo "Runtime config written to ${SETTINGS_DIR}/runtime.conf"

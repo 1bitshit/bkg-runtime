@@ -39,7 +39,8 @@ INSTANCE_w1_MODEL="minimaxai/minimax-m3"
 - **SETTINGS_DIR** — Claude config directory (relative to script dir, e.g. `conf/claude-w1`)
 - **NAME** — Screen session name suffix
 - **MODEL** — LLM model for claude-nim gateway
-- **BIN_DIR** — Directory containing local `claude-nim-w1/w2/w3` binaries (auto-detected)
+- **BIN_DIR** — Directory containing local `claude-nim-w1/w2/w3` binaries
+- **INSTANCE_wX_BIN** — Full path to instance binary (overrides `BIN_DIR`)
 
 ## Architecture
 
@@ -54,5 +55,29 @@ Each instance runs in its own `screen` session with an isolated Claude config di
 
 - `screen`
 - `curl`
-- `claude-nim` (in PATH)
+- `claude-nim-w1/w2/w3` binaries in `bin/` (or system `claude-nim`)
 - `bun` (for `bunx --yes claude`)
+
+## Docker
+
+Run all 3 instances in Docker containers:
+
+```bash
+docker compose up -d
+```
+
+Or integrate with existing Multica stack:
+
+```bash
+docker compose -f docker-compose.yml -f ../docker-compose.selfhost.custom.yml up -d
+```
+
+Each instance is a separate container:
+
+| Service   | Port | Binary           |
+|-----------|------|------------------|
+| claude-w1 | 7000 | bin/claude-nim-w1 |
+| claude-w2 | 7001 | bin/claude-nim-w2 |
+| claude-w3 | 7002 | bin/claude-nim-w3 |
+
+Sessions persist via mounted `conf/` and `session-w*.json` volumes.
