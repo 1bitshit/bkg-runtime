@@ -2,7 +2,8 @@
 conf/claude-w1/
 conf/claude-w2/
 conf/claude-w3/
-
+.claude-tower
+.opencode
 # Screen logs and temp
 *.log
 screenlog.*
@@ -26,3 +27,5 @@ node_modules/
 
 # Local binaries
 bin/
+.claude-tower/
+.opencode/
