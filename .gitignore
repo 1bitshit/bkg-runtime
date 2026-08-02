@@ -1,0 +1,23 @@
+# Instance settings directories
+.claude-w1/
+.claude-w2/
+.claude-w3/
+
+# Screen logs and temp
+*.log
+screenlog.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+*.local
