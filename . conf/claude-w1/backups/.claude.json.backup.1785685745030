@@ -1,8 +1,0 @@
-{
-  "projects": {
-    "*": {
-      "hasTrustDialogAccepted": true,
-      "hasCompletedOnboarding": true
-    }
-  }
-}

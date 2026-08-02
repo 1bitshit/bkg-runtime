@@ -21,3 +21,5 @@ Thumbs.db
 # Node
 node_modules/
 *.local
+.opencode
+. conf/
