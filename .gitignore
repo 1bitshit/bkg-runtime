@@ -4,6 +4,7 @@ conf/claude-w2/
 conf/claude-w3/
 .claude-tower
 .opencode
+.conf
 # Screen logs and temp
 *.log
 screenlog.*
