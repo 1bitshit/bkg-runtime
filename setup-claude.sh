@@ -4,9 +4,10 @@
 #
 # Auto-detects API keys from /opt/stacks/multica/.env.runt if present.
 
-# Detect base directory (parent of scripts/ dir = runtime root)
+# Detect base directory (where files will be created)
+# Use BASE_DIR env var if set, otherwise use the script's own directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BASE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+BASE_DIR="${BASE_DIR:-$SCRIPT_DIR}"
 
 echo "=== Claude Code Multi-Instance Setup ==="
 echo "Target directory: $BASE_DIR"
@@ -171,7 +172,7 @@ start_instance() {
 
   # Resolve settings dir
   SETTINGS_DIR="$(make_abs "$SETTINGS_DIR")"
-  mkdir -p "$SETTINGS_DIR"
+  mkdir -p "$SETTINGS_DIR/logs" "$SETTINGS_DIR/cache" "$SETTINGS_DIR/backups"
 
   # Determine binary: use local bin if available
   local NIM_BIN="claude-nim"
@@ -193,6 +194,24 @@ start_instance() {
 CLAUDFE
   echo "Config written to ${SETTINGS_DIR}/.claude.json"
 
+  # Write runtime config file for this instance
+  cat > "${SETTINGS_DIR}/runtime.conf" << RUNCONF
+# Runtime configuration for instance ${INSTANCE_NAME}
+INSTANCE_NAME="${INSTANCE_NAME}"
+INSTANCE_PORT="${PORT}"
+INSTANCE_HOST="${HOST}"
+INSTANCE_API_KEY="${API_KEY}"
+INSTANCE_MODEL="${MODEL:-default}"
+NIM_BINARY="${NIM_BIN:-claude-nim}"
+SETTINGS_DIR="${SETTINGS_DIR}"
+SCREEN_SESSION="claude-nim-${INSTANCE_NAME}"
+LOG_DIR="${SETTINGS_DIR}/logs"
+CACHE_DIR="${SETTINGS_DIR}/cache"
+ANTHROPIC_BASE_URL="http://${HOST}:${PORT}"
+CLAUDE_CONFIG_DIR="${SETTINGS_DIR}"
+RUNCONF
+  echo "Runtime config written to ${SETTINGS_DIR}/runtime.conf"
+
   # Kill existing screen if any
   screen -S "claude-nim-${INSTANCE_NAME}" -X quit 2>/dev/null
   sleep 1
@@ -203,8 +222,9 @@ CLAUDFE
     NIM_CMD+=(--model "$MODEL")
   fi
 
-  # Start claude-nim in detached screen
-  screen -dmS "claude-nim-${INSTANCE_NAME}" "${NIM_CMD[@]}"
+  # Start claude-nim in detached screen with logging
+  screen -L -Logfile "${SETTINGS_DIR}/logs/session.log" \
+    -dmS "claude-nim-${INSTANCE_NAME}" "${NIM_CMD[@]}"
 
   echo "Starting claude-nim-${INSTANCE_NAME} on ${HOST}:${PORT} (model: ${MODEL:-default})..."
   sleep 3

@@ -71,7 +71,7 @@ start_instance() {
 
   # Resolve settings dir
   SETTINGS_DIR="$(make_abs "$SETTINGS_DIR")"
-  mkdir -p "$SETTINGS_DIR"
+  mkdir -p "$SETTINGS_DIR/logs" "$SETTINGS_DIR/cache" "$SETTINGS_DIR/backups"
 
   # Determine binary: use local bin if available
   local NIM_BIN="claude-nim"
@@ -93,6 +93,24 @@ start_instance() {
 CLAUDFE
   echo "Config written to ${SETTINGS_DIR}/.claude.json"
 
+  # Write runtime config file for this instance
+  cat > "${SETTINGS_DIR}/runtime.conf" << RUNCONF
+# Runtime configuration for instance ${INSTANCE_NAME}
+INSTANCE_NAME="${INSTANCE_NAME}"
+INSTANCE_PORT="${PORT}"
+INSTANCE_HOST="${HOST}"
+INSTANCE_API_KEY="${API_KEY}"
+INSTANCE_MODEL="${MODEL:-default}"
+NIM_BINARY="${NIM_BIN:-claude-nim}"
+SETTINGS_DIR="${SETTINGS_DIR}"
+SCREEN_SESSION="claude-nim-${INSTANCE_NAME}"
+LOG_DIR="${SETTINGS_DIR}/logs"
+CACHE_DIR="${SETTINGS_DIR}/cache"
+ANTHROPIC_BASE_URL="http://${HOST}:${PORT}"
+CLAUDE_CONFIG_DIR="${SETTINGS_DIR}"
+RUNCONF
+  echo "Runtime config written to ${SETTINGS_DIR}/runtime.conf"
+
   # Kill existing screen if any
   screen -S "claude-nim-${INSTANCE_NAME}" -X quit 2>/dev/null
   sleep 1
@@ -103,8 +121,9 @@ CLAUDFE
     NIM_CMD+=(--model "$MODEL")
   fi
 
-  # Start claude-nim in detached screen
-  screen -dmS "claude-nim-${INSTANCE_NAME}" "${NIM_CMD[@]}"
+  # Start claude-nim in detached screen with logging
+  screen -L -Logfile "${SETTINGS_DIR}/logs/session.log" \
+    -dmS "claude-nim-${INSTANCE_NAME}" "${NIM_CMD[@]}"
 
   echo "Starting claude-nim-${INSTANCE_NAME} on ${HOST}:${PORT} (model: ${MODEL:-default})..."
   sleep 3

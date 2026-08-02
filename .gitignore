@@ -2,9 +2,7 @@
 conf/claude-w1/
 conf/claude-w2/
 conf/claude-w3/
-.claude-tower
-.opencode
-.conf
+
 # Screen logs and temp
 *.log
 screenlog.*
@@ -23,13 +21,3 @@ Thumbs.db
 # Node
 node_modules/
 *.local
-.opencode
-. conf/
-
-# Environment files
-.env.*.local
-
-# Local binaries
-bin/
-.claude-tower/
-.opencode/
